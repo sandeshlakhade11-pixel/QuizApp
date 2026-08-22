@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>QuizOps - Admin Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+    <div class="container">
+        <!-- NAVBAR -->
+        <div class="navbar" style="display:flex; justify-content: space-between; align-items:center; background:#1e293b; padding:15px; border-radius:12px; margin-bottom:20px; flex-wrap:wrap; gap:10px;">
+            <div style="font-size:18px; font-weight:bold; color:#38bdf8;">
+                <i class="fa-solid fa-user-shield"></i> QuizOps Admin Portal
+            </div>
+            <div style="display:flex; align-items:center; gap:10px;">
+                <span class="badge" style="background:rgba(56,189,248,0.2); color:#38bdf8; padding:6px 12px; border-radius:20px;">
+                    <i class="fa-solid fa-crown"></i> Admin: {{ session['username'] }}
+                </span>
+                <a href="/logout" class="btn-danger" style="background:#ef4444; color:#fff; padding:6px 12px; border-radius:6px; text-decoration:none;">
+                    <i class="fa-solid fa-right-from-bracket"></i> Logout
+                </a>
+            </div>
+        </div>
+
+        <!-- FLASH MESSAGES -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}" style="padding:10px; background:#10b981; color:#fff; border-radius:8px; margin-bottom:15px;">
+                        <i class="fa-solid fa-circle-info"></i> {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- ADD USER FORM -->
+        <div class="glass-card" style="margin-bottom:24px;">
+            <h2 class="header-title" style="font-size:18px; margin-bottom:15px; color:#38bdf8;">
+                <i class="fa-solid fa-user-plus"></i> Add New User (Teacher / Student / Admin)
+            </h2>
+            <form action="/admin/add_user" method="POST" style="display: flex; flex-direction: column; gap: 12px;">
+                <input type="text" name="username" class="form-control" placeholder="Username" required style="padding:10px; background:#0f172a; border:1px solid #334155; color:#fff; border-radius:6px;">
+                <input type="email" name="email" class="form-control" placeholder="Email Address" required style="padding:10px; background:#0f172a; border:1px solid #334155; color:#fff; border-radius:6px;">
+                <input type="password" name="password" class="form-control" placeholder="Password" required style="padding:10px; background:#0f172a; border:1px solid #334155; color:#fff; border-radius:6px;">
+                
+                <select name="role" class="form-control" required style="padding:10px; background:#0f172a; border:1px solid #334155; color:#fff; border-radius:6px;">
+                    <option value="Student">Student</option>
+                    <option value="Teacher">Teacher</option>
+                    <option value="Admin">Admin</option>
+                </select>
+
+                <button type="submit" class="btn-primary" style="background:#0284c7; color:#fff; padding:10px; border:none; border-radius:6px; font-weight:bold; cursor:pointer;">
+                    + Add User to System
+                </button>
+            </form>
+        </div>
+
+        <!-- USER MANAGEMENT TABLE -->
+        <div class="glass-card" style="margin-bottom:24px;">
+            <h2 class="header-title" style="font-size:18px; margin-bottom:15px; color:#38bdf8;">
+                <i class="fa-solid fa-users"></i> System User Management
+            </h2>
+            <div style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
+                <table class="custom-table" style="width:100%; min-width:600px;">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for u in users %}
+                        <tr>
+                            <td>#{{ u.id }}</td>
+                            <td><b>{{ u.username }}</b></td>
+                            <td>{{ u.email }}</td>
+                            <td><span class="badge" style="background:rgba(56,189,248,0.1); color:#38bdf8; padding:4px 8px; border-radius:4px;">{{ u.role }}</span></td>
+                            <td style="display:flex; gap:6px;">
+                                <a href="/edit_user/{{ u.id }}" style="background:#0284c7; color:#fff; padding:5px 10px; border-radius:4px; text-decoration:none; font-size:12px;">Edit</a>
+                                <a href="/delete_user/{{ u.id }}" onclick="return confirm('Delete user?')" style="background:#ef4444; color:#fff; padding:5px 10px; border-radius:4px; text-decoration:none; font-size:12px;">Delete</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- QUIZZES OVERVIEW -->
+        <div class="glass-card">
+            <h2 class="header-title" style="font-size:18px; margin-bottom:15px; color:#38bdf8;">
+                <i class="fa-solid fa-book"></i> All Created Quizzes Overview
+            </h2>
+            <div style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
+                <table class="custom-table" style="width:100%; min-width:600px;">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Quiz Title</th>
+                            <th>Subject</th>
+                            <th>Created By</th>
+                            <th>Duration</th>
+                            <th>Pass %</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for q in quizzes %}
+                        <tr>
+                            <td>#{{ q.id }}</td>
+                            <td><b>{{ q.title }}</b></td>
+                            <td>{{ q.subject }}</td>
+                            <td>{{ q.created_by }}</td>
+                            <td>{{ q.duration }} Mins</td>
+                            <td>{{ q.pass_percentage }}%</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="6" style="text-align:center; color:#94a3b8; padding:15px;">No quizzes created yet.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+</body>
+</html>

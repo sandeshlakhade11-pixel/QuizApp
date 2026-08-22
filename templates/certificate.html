@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Certificate - {{ result['quiz_title'] }}</title>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style> 
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Pinyon+Script&family=Poppins:wght@400;600&display=swap');
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body { 
+            background: #0f172a; 
+            font-family: 'Poppins', sans-serif; 
+            min-height: 100vh; 
+            padding: 15px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+        }
+
+        /* Action Buttons Header */
+        .actions { 
+            width: 100%; 
+            max-width: 850px; 
+            display: flex; 
+            justify-content: space-between; 
+            margin-bottom: 20px; 
+        }
+        
+        .btn-btn { 
+            padding: 10px 18px; 
+            border-radius: 8px; 
+            text-decoration: none; 
+            color: #ffffff; 
+            font-weight: 600; 
+            cursor: pointer; 
+            border: none; 
+            font-size: 14px; 
+            display: inline-flex; 
+            align-items: center; 
+            gap: 8px;
+            transition: opacity 0.2s ease;
+        }
+        .btn-btn:hover { opacity: 0.9; }
+        .btn-back { background: #334155; }
+        .btn-print { background: #16a34a; }
+
+        /* Certificate Design */
+        .cert-outer { 
+            width: 100%; 
+            max-width: 850px; 
+            background: #ffffff; 
+            padding: 16px; 
+            border: 8px solid #1e293b; 
+            border-radius: 4px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5); 
+        }
+
+        .cert-inner { 
+            border: 2px double #b45309; 
+            padding: 30px 20px; 
+            text-align: center; 
+            background: #fffdfa; 
+            position: relative;
+        }
+
+        .brand-header { 
+            font-family: 'Cinzel', serif; 
+            font-size: clamp(14px, 4vw, 18px); 
+            color: #0f172a; 
+            font-weight: 700; 
+        }
+
+        .cert-title { 
+            font-family: 'Cinzel', serif; 
+            font-size: clamp(20px, 5vw, 32px); 
+            color: #b45309; 
+            margin: 12px 0; 
+            font-weight: 800; 
+            letter-spacing: 1px;
+        }
+
+        .recipient-name { 
+            font-family: 'Pinyon Script', cursive; 
+            font-size: clamp(36px, 8vw, 56px); 
+            color: #0f172a; 
+            border-bottom: 2px solid #cbd5e1; 
+            display: inline-block; 
+            padding: 0 20px; 
+            margin: 10px 0;
+        }
+
+        .cert-text { 
+            font-size: clamp(12px, 3vw, 14px); 
+            color: #475569; 
+            margin: 15px auto; 
+            max-width: 620px; 
+            line-height: 1.6; 
+        }
+
+        .cert-footer { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: flex-end; 
+            margin-top: 35px; 
+            padding: 0 15px; 
+        }
+
+        .meta-box { text-align: left; font-size: 12px; color: #64748b; line-height: 1.6; }
+        .signature-box { text-align: center; }
+        .sign-line { width: 140px; border-top: 2px solid #0f172a; margin-top: 20px; }
+
+        /* Responsive Settings */
+        @media (max-width: 500px) {
+            .cert-footer { flex-direction: column; align-items: center; gap: 20px; text-align: center; }
+            .meta-box { text-align: center; }
+        }
+
+        /* PDF Printing Settings */
+        @media print {
+            @page { size: landscape; margin: 0; }
+            body { background: #ffffff; padding: 0; }
+            .actions { display: none !important; }
+            .cert-outer { box-shadow: none; border-width: 4px; width: 100%; max-width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ACTION BUTTONS -->
+    <div class="actions">
+        <a href="/student/dashboard" class="btn-btn btn-back">
+            <i class="fa-solid fa-arrow-left"></i> Back to Dashboard
+        </a>
+        <button onclick="window.print()" class="btn-btn btn-print">
+            <i class="fa-solid fa-file-pdf"></i> Print / Save PDF
+        </button>
+    </div>
+
+    <!-- CERTIFICATE TEMPLATE -->
+    <div class="cert-outer">
+        <div class="cert-inner">
+            <div class="brand-header">
+                <i class="fa-solid fa-graduation-cap"></i> QuizOps Academy
+            </div>
+            
+            <h1 class="cert-title">CERTIFICATE OF ACHIEVEMENT</h1>
+            <p style="font-size: 11px; color: #64748b; letter-spacing: 1.5px; font-weight: 600;">PROUDLY PRESENTED TO</p>
+
+            <div class="recipient-name">{{ result['username'] }}</div>
+
+            <p class="cert-text">
+                For successfully passing the official evaluation for 
+                <b>{{ result['quiz_title'] }}</b> (Subject: <b>{{ result['subject'] }}</b>)
+                with a passing score of <b>{{ result['percentage'] }}%</b>.
+            </p>
+
+            <div class="cert-footer">
+                <div class="meta-box">
+                    <p>Score: <b>{{ result['score'] }}/{{ result['total_questions'] }}</b></p>
+                    <p>Date: <b>{{ result['date_taken'] if result['date_taken'] else 'N/A' }}</b></p>
+                    <p>Status: <b style="color: #16a34a;"><i class="fa-solid fa-circle-check"></i> VERIFIED</b></p>
+                </div>
+
+                <div class="signature-box">
+                    <div class="sign-line"></div>
+                    <p style="font-size: 11px; font-weight: 600; color: #64748b; margin-top: 6px;">Authorized Examiner</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
