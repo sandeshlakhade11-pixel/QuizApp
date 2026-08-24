@@ -2,131 +2,131 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>QuizOps - Student Dashboard</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #0d1b2a; color: #ffffff; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; min-height: 100vh; }
+        .navbar-custom { background-color: #1b263b; border-bottom: 1px solid #415a77; }
+        .dashboard-card { background-color: #1b263b; border: 1px solid #415a77; border-radius: 12px; }
+        .table-dark { background-color: #0d1b2a; color: #ffffff; }
+        .table-dark th { background-color: #152238; color: #00b4d8; border-color: #415a77; }
+        .table-dark td { border-color: #2a3a5e; vertical-align: middle; }
+    </style>
 </head>
 <body>
 
-    <div class="container">
-        <!-- NAVBAR -->
-        <div class="navbar" style="display:flex; justify-content: space-between; align-items:center; background:#1e293b; padding:15px; border-radius:12px; margin-bottom:20px; flex-wrap:wrap; gap:10px;">
-            <div style="font-size:18px; font-weight:bold; color:#38bdf8;">
-                <i class="fa-solid fa-graduation-cap"></i> QuizOps Student Portal
-            </div>
-            <div style="display:flex; align-items:center; gap:10px;">
-                <span class="badge" style="background:rgba(56,189,248,0.2); color:#38bdf8; padding:6px 12px; border-radius:20px;">
-                    <i class="fa-solid fa-user-graduate"></i> {{ session['username'] }}
-                </span>
-                <a href="/logout" class="btn-danger" style="background:#ef4444; color:#fff; padding:6px 12px; border-radius:6px; text-decoration:none;">
-                    <i class="fa-solid fa-right-from-bracket"></i> Logout
-                </a>
-            </div>
+<!-- Navbar -->
+<nav class="navbar navbar-custom px-3 py-2 mb-4">
+    <div class="container-fluid d-flex justify-content-between align-items-center">
+        <span class="navbar-brand text-info fw-bold fs-5">🎓 QuizOps Student Portal</span>
+        <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-secondary d-none d-sm-inline-block">👤 {{ current_user.username }}</span>
+            <a href="{{ url_for('logout') }}" class="btn btn-danger btn-sm fw-bold">🚪 Logout</a>
         </div>
+    </div>
+</nav>
 
-        <!-- FLASH MESSAGES -->
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ category }}" style="padding:10px; background:#10b981; color:#fff; border-radius:8px; margin-bottom:15px;">
-                        <i class="fa-solid fa-circle-info"></i> {{ message }}
-                    </div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
+<div class="container">
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }} alert-dismissible fade show text-center" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
 
-        <!-- AVAILABLE QUIZZES -->
-        <div class="glass-card" style="margin-bottom:24px;">
-            <h2 class="header-title" style="font-size:18px; margin-bottom:15px; color:#38bdf8;">
-                <i class="fa-solid fa-pen-to-square"></i> Available Quizzes for You
-            </h2>
-            <div style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
-                <table class="custom-table" style="width:100%; min-width:500px;">
-                    <thead>
+    <!-- Section 1: Available Quizzes -->
+    <div class="dashboard-card p-3 p-md-4 mb-4">
+        <h5 class="text-info fw-bold mb-3">📝 Available Quizzes for You</h5>
+        <div class="table-responsive">
+            <table class="table table-dark table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Quiz Title</th>
+                        <th>Subject</th>
+                        <th>Duration</th>
+                        <th>Passing Limit</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if available_quizzes %}
+                        {% for quiz in available_quizzes %}
                         <tr>
-                            <th>Quiz Title</th>
-                            <th>Subject</th>
-                            <th>Duration</th>
-                            <th>Passing Limit</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for q in quizzes %}
-                        <tr>
-                            <td><b>{{ q.title }}</b></td>
-                            <td>{{ q.subject }}</td>
-                            <td>{{ q.duration }} Mins</td>
-                            <td>{{ q.pass_percentage }}%</td>
+                            <td class="fw-bold">{{ quiz.title }}</td>
+                            <td>{{ quiz.subject }}</td>
+                            <td>{{ quiz.duration }} Mins</td>
+                            <td>{{ quiz.pass_mark }}%</td>
                             <td>
-                                <a href="/take_quiz/{{ q.id }}" class="btn-primary" style="background:#10b981; color:#fff; padding:6px 12px; border-radius:6px; text-decoration:none; display:inline-block;">
-                                    <i class="fa-solid fa-play"></i> Start Test
-                                </a>
+                                <a href="{{ url_for('take_quiz', quiz_id=quiz.id) }}" class="btn btn-success btn-sm px-3 fw-bold">▶ Start Test</a>
                             </td>
-                        </tr>
-                        {% else %}
-                        <tr>
-                            <td colspan="5" style="text-align:center; color:#94a3b8; padding:15px;">No quizzes available.</td>
                         </tr>
                         {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+                    {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted">No Quizzes Available Right Now.</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
         </div>
-
-        <!-- EXAM HISTORY & CERTIFICATES -->
-        <div class="glass-card">
-            <h2 class="header-title" style="font-size:18px; margin-bottom:15px; color:#38bdf8;">
-                <i class="fa-solid fa-trophy"></i> My Exam History & Certificates
-            </h2>
-            <div style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
-                <table class="custom-table" style="width:100%; min-width:600px;">
-                    <thead>
-                        <tr>
-                            <th>Quiz Title</th>
-                            <th>Score</th>
-                            <th>Percentage</th>
-                            <th>Status</th>
-                            <th>Date Taken</th>
-                            <th>Certificate</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for r in results %}
-                        <tr>
-                            <td><b>{{ r.quiz_title }}</b></td>
-                            <td>{{ r.score }} / {{ r.total_questions }}</td>
-                            <td><b>{{ r.percentage }}%</b></td>
-                            <td>
-                                {% if r.status|lower == 'pass' %}
-                                    <span style="color:#10b981; font-weight:bold;">Pass</span>
-                                {% else %}
-                                    <span style="color:#ef4444; font-weight:bold;">Fail</span>
-                                {% endif %}
-                            </td>
-                            <td>{{ r.date_today }}</td>
-                            <td>
-                                {% if r.status|lower == 'pass' %}
-                                    <a href="/download_certificate/{{ r.id }}" class="btn-primary" style="background:#38bdf8; color:#0f172a; font-weight:bold; padding:6px 12px; border-radius:6px; text-decoration:none; display:inline-flex; align-items:center; gap:5px;">
-                                        <i class="fa-solid fa-download"></i> Certificate
-                                    </a>
-                                {% else %}
-                                    <span style="color:#64748b; font-size:13px;">Not Eligible</span>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        {% else %}
-                        <tr>
-                            <td colspan="6" style="text-align:center; color:#94a3b8; padding:15px;">No exam history found.</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
     </div>
 
+    <!-- Section 2: Exam History & Certificates -->
+    <div class="dashboard-card p-3 p-md-4 mb-4">
+        <h5 class="text-info fw-bold mb-3">🏆 My Exam History & Certificates</h5>
+        <div class="table-responsive">
+            <table class="table table-dark table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Quiz Title</th>
+                        <th>Score</th>
+                        <th>Percentage</th>
+                        <th>Status</th>
+                        <th>Date Taken</th>
+                        <th>Certificate</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if history %}
+                        {% for result in history %}
+                        <tr>
+                            <td class="fw-bold">{{ result.quiz_title }}</td>
+                            <td>{{ result.score }}/{{ result.total_questions }}</td>
+                            <td>{{ "%.1f"|format(result.percentage) }}%</td>
+                            <td>
+                                {% if result.status == 'Pass' %}
+                                    <span class="badge bg-success">Pass</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Fail</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ result.date_taken }}</td>
+                            <td>
+                                {% if result.status == 'Pass' %}
+                                    <a href="{{ url_for('download_certificate', result_id=result.id) }}" class="btn btn-info btn-sm text-dark fw-bold">📥 Certificate</a>
+                                {% else %}
+                                    <span class="text-muted small">Not Eligible</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted">No Exam History Found.</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
