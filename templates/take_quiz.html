@@ -11,148 +11,199 @@
             background-color: #0f172a;
             color: #f8fafc;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            padding: 20px;
+            padding: 20px 10px;
         }
-        .container { max-width: 800px; margin: 0 auto; }
+        .container { 
+            max-width: 900px; 
+            margin: 0 auto; 
+        }
         
-        /* Fixed Header with Live Timer */
+        /* HEADER & TIMER STYLES */
         .quiz-header {
-            position: sticky;
-            top: 10px;
-            z-index: 100;
             background: #1e293b;
-            border: 1px solid #38bdf8;
-            padding: 15px 25px;
+            border: 1px solid #334155;
+            padding: 15px 20px;
             border-radius: 12px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
             margin-bottom: 25px;
+            position: sticky;
+            top: 10px;
+            z-index: 100;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
         }
-        .quiz-title { font-size: 18px; font-weight: 700; color: #f8fafc; }
-        .timer-box {
-            background: rgba(239, 68, 68, 0.2);
-            color: #f87171;
-            border: 1px solid #ef4444;
+        .quiz-title {
+            font-size: 18px;
+            color: #38bdf8;
+            font-weight: bold;
+        }
+        .timer-badge {
+            background: rgba(220, 38, 38, 0.2);
+            color: #ef4444;
             padding: 8px 16px;
             border-radius: 8px;
-            font-size: 18px;
-            font-weight: 700;
+            font-weight: bold;
+            font-size: 16px;
+            border: 1px solid #ef4444;
             display: flex;
             align-items: center;
             gap: 8px;
         }
 
-        .question-card {
+        /* QUESTION CARD STYLES */
+        .q-card {
             background: #1e293b;
             border: 1px solid #334155;
             border-radius: 12px;
             padding: 22px;
             margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
         }
-        .q-number { font-size: 13px; color: #38bdf8; font-weight: 700; margin-bottom: 6px; }
-        .q-text { font-size: 16px; font-weight: 600; margin-bottom: 15px; }
+        .q-num {
+            font-size: 13px;
+            color: #38bdf8;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+        .q-title {
+            font-size: 17px;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 18px;
+            line-height: 1.4;
+        }
 
-        .options-list { display: flex; flex-direction: column; gap: 10px; }
-        .option-item {
+        /* OPTION BUTTON STYLES */
+        .option-label {
             display: flex;
             align-items: center;
             background: #0f172a;
-            border: 1px solid #334155;
-            padding: 12px 15px;
-            border-radius: 8px;
+            border: 1.5px solid #334155;
+            padding: 14px 18px;
+            border-radius: 10px;
+            margin-bottom: 12px;
             cursor: pointer;
-            transition: border-color 0.2s;
+            transition: all 0.2s ease;
+            font-size: 15px;
         }
-        .option-item:hover { border-color: #38bdf8; }
-        .option-item input { margin-right: 12px; width: 18px; height: 18px; accent-color: #38bdf8; cursor: pointer; }
+        .option-label:hover { 
+            border-color: #38bdf8; 
+            background: #162032;
+        }
+        .option-label input[type="radio"] { 
+            margin-right: 14px; 
+            width: 18px;
+            height: 18px;
+            accent-color: #38bdf8;
+            cursor: pointer;
+        }
+        .option-label input[type="radio"]:checked + span {
+            color: #38bdf8;
+            font-weight: bold;
+        }
         
         .btn-submit {
             width: 100%;
-            padding: 15px;
-            background: #16a34a;
-            color: #fff;
+            padding: 16px;
+            background: #10b981;
+            color: white;
             border: none;
             border-radius: 10px;
-            font-size: 18px;
-            font-weight: 700;
+            font-size: 17px;
+            font-weight: bold;
             cursor: pointer;
             margin-top: 10px;
+            margin-bottom: 30px;
+            transition: background 0.2s;
         }
-        .btn-submit:hover { background: #15803d; }
+        .btn-submit:hover { background: #059669; }
+
+        @media (max-width: 600px) {
+            .quiz-header { flex-direction: column; gap: 10px; text-align: center; }
+            .q-card { padding: 15px; }
+            .option-label { padding: 12px; font-size: 14px; }
+        }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <!-- Live Countdown Timer Bar -->
-        <div class="quiz-header">
-            <div class="quiz-title">
-                <i class="fa-solid fa-file-signature"></i> {{ quiz.title }} ({{ quiz.subject }})
-            </div>
-            <div class="timer-box">
-                <i class="fa-solid fa-hourglass-half"></i> <span id="timer">--:--</span>
-            </div>
+<div class="container">
+    <!-- HEADER WITH TIMER -->
+    <div class="quiz-header">
+        <div class="quiz-title">
+            <i class="fa-solid fa-file-signature"></i> {{ quiz.title }} ({{ quiz.subject }})
         </div>
-
-        <form id="quizForm" method="POST" action="/submit_quiz/{{ quiz.id }}">
-            {% for q in questions %}
-            <div class="question-card">
-                <div class="q-number">QUESTION {{ loop.index }} OF {{ questions|length }}</div>
-                <div class="q-text">{{ q.question_text }}</div>
-
-                <div class="options-list">
-                    <label class="option-item">
-                        <input type="radio" name="question_{{ q.id }}" value="A">
-                        <span><b>A.</b> {{ q.option_a }}</span>
-                    </label>
-                    <label class="option-item">
-                        <input type="radio" name="question_{{ q.id }}" value="B">
-                        <span><b>B.</b> {{ q.option_b }}</span>
-                    </label>
-                    <label class="option-item">
-                        <input type="radio" name="question_{{ q.id }}" value="C">
-                        <span><b>C.</b> {{ q.option_c }}</span>
-                    </label>
-                    <label class="option-item">
-                        <input type="radio" name="question_{{ q.id }}" value="D">
-                        <span><b>D.</b> {{ q.option_d }}</span>
-                    </label>
-                </div>
-            </div>
-            {% endfor %}
-
-            <button type="submit" class="btn-submit" onclick="return confirm('Are you sure you want to submit your test?')">
-                <i class="fa-solid fa-paper-plane"></i> Submit Test Now
-            </button>
-        </form>
+        <div class="timer-badge">
+            <i class="fa-solid fa-hourglass-half"></i> 
+            Time Left: <span id="timer">--:--</span>
+        </div>
     </div>
 
-    <!-- Countdown Timer Logic -->
-    <script>
-        let durationMinutes = parseInt("{{ quiz.duration }}") || 10;
-        let totalSeconds = durationMinutes * 60;
-        const timerElement = document.getElementById('timer');
-        const form = document.getElementById('quizForm');
+    <!-- QUIZ FORM -->
+    <form id="quizForm" action="{{ url_for('submit_quiz', quiz_id=quiz.id) }}" method="POST">
+        {% for q in questions %}
+        <div class="q-card">
+            <div class="q-num">Question {{ loop.index }} of {{ questions|length }}</div>
+            <div class="q-title">{{ q.question_text }}</div>
 
-        const countdown = setInterval(() => {
-            let minutes = Math.floor(totalSeconds / 60);
-            let seconds = totalSeconds % 60;
+            <label class="option-label">
+                <input type="radio" name="question_{{ q.id }}" value="Option A" required>
+                <span><b>A.</b> {{ q.option1 }}</span>
+            </label>
 
-            minutes = minutes < 10 ? '0' + minutes : minutes;
-            seconds = seconds < 10 ? '0' + seconds : seconds;
+            <label class="option-label">
+                <input type="radio" name="question_{{ q.id }}" value="Option B">
+                <span><b>B.</b> {{ q.option2 }}</span>
+            </label>
 
-            timerElement.textContent = `${minutes}:${seconds}`;
+            <label class="option-label">
+                <input type="radio" name="question_{{ q.id }}" value="Option C">
+                <span><b>C.</b> {{ q.option3 }}</span>
+            </label>
 
-            if (totalSeconds <= 0) {
-                clearInterval(countdown);
-                alert("Time is UP! Your answers are being submitted automatically.");
-                form.submit();
-            }
-            totalSeconds--;
-        }, 1000);
-    </script>
+            <label class="option-label">
+                <input type="radio" name="question_{{ q.id }}" value="Option D">
+                <span><b>D.</b> {{ q.option4 }}</span>
+            </label>
+        </div>
+        {% endfor %}
+
+        <button type="submit" class="btn-submit">
+            <i class="fa-solid fa-paper-plane"></i> Submit Test Now
+        </button>
+    </form>
+</div>
+
+<!-- LIVE COUNTDOWN TIMER SCRIPT -->
+<script>
+    let durationInMinutes = Number("{{ quiz.duration_minutes or quiz.duration or 20 }}");
+    let totalSeconds = durationInMinutes * 60;
+    
+    let timerElement = document.getElementById('timer');
+    let quizForm = document.getElementById('quizForm');
+
+    let countdown = setInterval(function() {
+        let minutes = Math.floor(totalSeconds / 60);
+        let seconds = totalSeconds % 60;
+
+        if (seconds < 10) seconds = '0' + seconds;
+        if (minutes < 10) minutes = '0' + minutes;
+
+        if (timerElement) {
+            timerElement.textContent = minutes + ':' + seconds;
+        }
+
+        if (totalSeconds <= 0) {
+            clearInterval(countdown);
+            alert("Time is up! Your exam will be submitted automatically.");
+            if (quizForm) quizForm.submit();
+        }
+        totalSeconds--;
+    }, 1000);
+</script>
 
 </body>
 </html>

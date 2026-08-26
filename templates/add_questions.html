@@ -83,14 +83,20 @@
         .opt-tag {
             display: inline-block;
             background: #1e293b;
-            padding: 4px 8px;
+            padding: 6px 12px;
             border-radius: 4px;
-            font-size: 12px;
+            font-size: 13px;
             margin-right: 8px;
             margin-top: 6px;
             color: #94a3b8;
+            border: 1px solid #334155;
         }
-        .opt-correct { background: rgba(34, 197, 94, 0.2); color: #4ade80; border: 1px solid #22c55e; }
+        .opt-correct { 
+            background: rgba(34, 197, 94, 0.2); 
+            color: #4ade80; 
+            border: 1px solid #22c55e; 
+            font-weight: bold; 
+        }
 
         .alert {
             padding: 12px;
@@ -108,7 +114,7 @@
     <div class="container">
         <div class="header">
             <h2>Add Questions to: <span style="color: #38bdf8;">{{ quiz.title }}</span></h2>
-            <a href="/teacher/dashboard" class="btn-back"><i class="fa-solid fa-arrow-left"></i> Back to Dashboard</a>
+            <a href="{{ url_for('teacher_dashboard') }}" class="btn-back"><i class="fa-solid fa-arrow-left"></i> Back to Dashboard</a>
         </div>
 
         {% with messages = get_flashed_messages(with_categories=true) %}
@@ -122,7 +128,7 @@
         <!-- Form: Add Question -->
         <div class="card">
             <div class="card-title"><i class="fa-solid fa-plus-circle"></i> Add New MCQ Question</div>
-            <form method="POST">
+            <form action="{{ url_for('manage_questions', quiz_id=quiz.id) }}" method="POST">
                 <div class="form-group">
                     <label>Question Text</label>
                     <input type="text" name="question_text" placeholder="e.g. What is the output of print(2 ** 3) in Python?" required>
@@ -131,30 +137,30 @@
                 <div class="grid-options">
                     <div class="form-group">
                         <label>Option A</label>
-                        <input type="text" name="option_a" placeholder="Option A" required>
+                        <input type="text" name="option1" placeholder="Option A" required>
                     </div>
                     <div class="form-group">
                         <label>Option B</label>
-                        <input type="text" name="option_b" placeholder="Option B" required>
+                        <input type="text" name="option2" placeholder="Option B" required>
                     </div>
                     <div class="form-group">
                         <label>Option C</label>
-                        <input type="text" name="option_c" placeholder="Option C" required>
+                        <input type="text" name="option3" placeholder="Option C" required>
                     </div>
                     <div class="form-group">
                         <label>Option D</label>
-                        <input type="text" name="option_d" placeholder="Option D" required>
+                        <input type="text" name="option4" placeholder="Option D" required>
                     </div>
                 </div>
 
                 <div class="form-group">
                     <label>Correct Answer Option</label>
                     <select name="correct_option" required>
-                        <option value="">Select Correct Option</option>
-                        <option value="A">Option A</option>
-                        <option value="B">Option B</option>
-                        <option value="C">Option C</option>
-                        <option value="D">Option D</option>
+                        <option value="" disabled selected>Select Correct Option</option>
+                        <option value="Option A">Option A</option>
+                        <option value="Option B">Option B</option>
+                        <option value="Option C">Option C</option>
+                        <option value="Option D">Option D</option>
                     </select>
                 </div>
 
@@ -172,12 +178,12 @@
             
             {% for q in questions %}
             <div class="q-list-item">
-                <p><b>Q{{ loop.index }}: {{ q.question_text }}</b></p>
+                <p><b style="color: #fff;">Q{{ loop.index }}: {{ q.question_text }}</b></p>
                 <div>
-                    <span class="opt-tag {% if q.correct_option == 'A' %}opt-correct{% endif %}">A: {{ q.option_a }}</span>
-                    <span class="opt-tag {% if q.correct_option == 'B' %}opt-correct{% endif %}">B: {{ q.option_b }}</span>
-                    <span class="opt-tag {% if q.correct_option == 'C' %}opt-correct{% endif %}">C: {{ q.option_c }}</span>
-                    <span class="opt-tag {% if q.correct_option == 'D' %}opt-correct{% endif %}">D: {{ q.option_d }}</span>
+                    <span class="opt-tag {% if q.correct_option in ['Option A', 'A', q.option1] %}opt-correct{% endif %}">A: {{ q.option1 }}</span>
+                    <span class="opt-tag {% if q.correct_option in ['Option B', 'B', q.option2] %}opt-correct{% endif %}">B: {{ q.option2 }}</span>
+                    <span class="opt-tag {% if q.correct_option in ['Option C', 'C', q.option3] %}opt-correct{% endif %}">C: {{ q.option3 }}</span>
+                    <span class="opt-tag {% if q.correct_option in ['Option D', 'D', q.option4] %}opt-correct{% endif %}">D: {{ q.option4 }}</span>
                 </div>
             </div>
             {% else %}

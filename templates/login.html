@@ -53,6 +53,18 @@
         .btn-primary:hover {
             background-color: #0077b6;
         }
+        /* Eye Icon Button Custom CSS */
+        .toggle-btn {
+            background-color: #0d1b2a;
+            border: 1px solid #415a77;
+            border-left: none;
+            color: #778da9;
+            cursor: pointer;
+        }
+        .toggle-btn:hover {
+            background-color: #1b263b;
+            color: #ffffff;
+        }
     </style>
 </head>
 <body>
@@ -77,9 +89,9 @@
             <label class="form-label">Select Role</label>
             <select name="role" class="form-select" required>
                 <option value="" selected disabled>-- Select Your Role --</option>
-                <option value="Student">Student</option>
-                <option value="Teacher">Teacher</option>
-                <option value="Admin">Admin</option>
+                <option value="admin">Admin</option>
+                <option value="teacher">Teacher</option>
+                <option value="student">Student</option>
             </select>
         </div>
 
@@ -90,7 +102,12 @@
 
         <div class="mb-3 text-start">
             <label class="form-label">Password</label>
-            <input type="password" name="password" class="form-control" placeholder="Enter Password" required>
+            <div class="input-group">
+                <input type="password" id="passwordInput" name="password" class="form-control" placeholder="Enter Password" style="border-right: none;" required>
+                <button class="btn toggle-btn" type="button" onclick="togglePassword()">
+                    <span id="eyeIcon">👁️</span>
+                </button>
+            </div>
         </div>
 
         <button type="submit" class="btn btn-primary w-100 py-2 mt-2">Login</button>
@@ -101,6 +118,21 @@
         <a href="{{ url_for('register') }}" class="text-info text-decoration-none fw-bold">Register Here</a>
     </div>
 </div>
+
+<script>
+function togglePassword() {
+    const passwordInput = document.getElementById('passwordInput');
+    const eyeIcon = document.getElementById('eyeIcon');
+    
+    if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        eyeIcon.textContent = '🙈';
+    } else {
+        passwordInput.type = 'password';
+        eyeIcon.textContent = '👁️';
+    }
+}
+</script>
 
 </body>
 </html>
