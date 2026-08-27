@@ -197,7 +197,7 @@ def submit_quiz(quiz_id):
                 score += 1
 
     percentage = (score / total_questions * 100) if total_questions > 0 else 0
-    passing_limit = getattr(quiz, 'passing_percentage', getattr(quiz, 'passing_limit', 80))
+    passing_limit = float(getattr(quiz, 'passing_percentage', 35))
     status = 'Passed' if percentage >= passing_limit else 'Failed'
     
     # Save Result with quiz_title and total_questions
