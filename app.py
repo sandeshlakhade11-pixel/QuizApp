@@ -27,6 +27,17 @@ def init_db():
         db.create_all()
     return "Database tables created successfully!"
 
+@app.route('/create-admin-now')
+def create_admin_now():
+    with app.app_context():
+        admin = User.query.filter(db.func.lower(User.role) == 'admin').first()
+        if not admin:
+            default_admin = User(username='admin', email='admin@quizops.com', password='adminpassword', role='Admin')
+            db.session.add(default_admin)
+            db.session.commit()
+            return "Admin created successfully! Now you can login."
+        return "Admin already exists!"
+
 # --- DATABASE MODELS ---
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
