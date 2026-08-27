@@ -21,6 +21,12 @@ with app.app_context():
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 
+@app.route('/init-db')
+def init_db():
+    with app.app_context():
+        db.create_all()
+    return "Database tables created successfully!"
+
 # --- DATABASE MODELS ---
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
