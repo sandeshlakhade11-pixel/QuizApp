@@ -157,7 +157,8 @@ def logout():
 @login_required
 def student_dashboard():
     quizzes = Quiz.query.all() 
-    results = Result.query.filter_by(user_id=current_user.id).all()
+    # इथे order_by लावून नवीन रेकॉर्ड सर्वात वर आणला आहे
+    results = Result.query.filter_by(user_id=current_user.id).order_by(Result.id.desc()).all()
     return render_template('student_dashboard.html', quizzes=quizzes, results=results)
 
 @app.route('/take_quiz/<int:quiz_id>')
