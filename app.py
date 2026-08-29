@@ -75,7 +75,6 @@ class Result(db.Model):
     status = db.Column(db.String(20), nullable=False) # Pass or Fail
     date_taken = db.Column(db.String(50), nullable=False)
     
-    # फिक्स: युझरचे नाव HTML मध्ये मिळण्यासाठी ही रिलेशनशिप जोडली आहे
     user = db.relationship('User', backref='results')
 
 @login_manager.user_loader
@@ -166,8 +165,6 @@ def take_quiz(quiz_id):
     questions = Question.query.filter_by(quiz_id=quiz.id).all()
     return render_template('take_quiz.html', quiz=quiz, questions=questions)
 
-import datetime
-
 @app.route('/submit_quiz/<int:quiz_id>', methods=['POST'])
 def submit_quiz(quiz_id):
     quiz = Quiz.query.get_or_404(quiz_id)
@@ -199,13 +196,13 @@ def submit_quiz(quiz_id):
     percentage = (score / total_questions * 100) if total_questions > 0 else 0
     passing_limit = float(getattr(quiz, 'pass_mark', 35))
     
-    # इथे आपण स्पष्टपणे अप्परकेस (कॅपिटल) करू जेणेकरून डॅशबोर्डवरील HTML टॅग्जशी अचूक मॅच होईल
+    # इथे आपण दोन्ही डॅशबोर्डसाठी स्टँडर्ड ठेवलं आहे: 
+    # जर टक्केवारी पासिंग लिमिटपेक्षा जास्त किंवा समान असेल तर 'Passed', अन्यथा 'Failed'
     if percentage >= passing_limit:
-        status = 'PASSED'
+        status = 'Passed'
     else:
-        status = 'FAILED'
+        status = 'Failed'
         
-    # Save Result with quiz_title and total_questions
     new_result = Result(
         user_id=current_user.id,
         quiz_id=quiz.id,
@@ -214,7 +211,7 @@ def submit_quiz(quiz_id):
         total_questions=total_questions,    
         percentage=percentage,
         status=status,
-        date_taken=datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        date_taken=datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     )
     
     db.session.add(new_result)
@@ -248,12 +245,11 @@ def create_quiz():
         title = request.form.get('title')
         subject = request.form.get('subject')
         
-        # Safe Typecasting
         duration_val = request.form.get('duration')
         pass_mark_val = request.form.get('pass_mark') or request.form.get('passing_percentage') or request.form.get('pass_percentage')
 
         duration = int(duration_val) if duration_val else 10
-        pass_mark = float(pass_mark_val) if pass_mark_val else 50.0
+        pass_mark = float(pass_mark_val) if pass_mark_val else 30.0
 
         new_quiz = Quiz(
             title=title,
@@ -286,7 +282,6 @@ def manage_questions(quiz_id):
         option4 = request.form.get('option4') or request.form.get('option_d')
         correct_option = request.form.get('correct_option')
 
-        # जर युझरने 'Option A' सिलेक्ट केले असेल तर त्यानुसार योग्य व्हॅल्यू सेट करणे
         if correct_option == 'Option A':
             correct_val = option1
         elif correct_option == 'Option B':
@@ -396,254 +391,63 @@ def download_certificate(result_id):
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Certificate_{user_name}</title>
         <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Alex+Brush&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-        
         <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-
         <style>
             * {{ box-sizing: border-box; margin: 0; padding: 0; }}
-            
             body {{
                 background-color: #0f172a;
-                display: flex;
-                flex-direction: column;
-                justify-content: center;
-                align-items: center;
-                min-height: 100vh;
-                padding: 20px 10px;
-                font-family: 'Plus Jakarta Sans', sans-serif;
+                display: flex; flex-direction: column; justify-content: center; align-items: center;
+                min-height: 100vh; padding: 20px 10px; font-family: 'Plus Jakarta Sans', sans-serif;
             }}
-
-            .cert-viewport {{
-                width: 100%;
-                max-width: 1000px;
-                display: flex;
-                justify-content: center;
-            }}
-
+            .cert-viewport {{ width: 100%; max-width: 1000px; display: flex; justify-content: center; }}
             .cert-card {{
-                width: 297mm;
-                height: 210mm;
-                background: #ffffff;
-                position: relative;
-                overflow: hidden;
-                display: flex;
-                flex-direction: column;
-                justify-content: space-between;
-                padding: 45px 65px;
-                border: 12px solid #0f172a;
-                box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-                flex-shrink: 0;
+                width: 297mm; height: 210mm; background: #ffffff; position: relative; overflow: hidden;
+                display: flex; flex-direction: column; justify-content: space-between; padding: 45px 65px;
+                border: 12px solid #0f172a; box-shadow: 0 10px 30px rgba(0,0,0,0.5); flex-shrink: 0;
             }}
-
-            @media screen and (max-width: 1150px) {{
-                .cert-viewport {{
-                    zoom: 0.75;
-                }}
-            }}
-
-            @media screen and (max-width: 768px) {{
-                .cert-viewport {{
-                    zoom: 0.35;
-                }}
-            }}
-            
-            .gold-border {{
-                position: absolute;
-                top: 12px; left: 12px; right: 12px; bottom: 12px;
-                border: 2px solid #c5a059;
-                pointer-events: none;
-                z-index: 1;
-            }}
-            .inner-thin-border {{
-                position: absolute;
-                top: 18px; left: 18px; right: 18px; bottom: 18px;
-                border: 1px solid #e2e8f0;
-                pointer-events: none;
-                z-index: 1;
-            }}
-            
-            .watermark {{
-                position: absolute;
-                top: 50%; left: 50%;
-                transform: translate(-50%, -50%);
-                font-family: 'Cinzel', serif;
-                font-size: 130px;
-                font-weight: 900;
-                color: rgba(197, 160, 89, 0.03);
-                letter-spacing: 15px;
-                pointer-events: none;
-                white-space: nowrap;
-                z-index: 0;
-            }}
-
-            .header {{
-                text-align: center;
-                z-index: 3;
-                margin-top: 5px;
-            }}
-            .brand-badge {{
-                font-family: 'Plus Jakarta Sans', sans-serif;
-                font-size: 13px;
-                font-weight: 700;
-                color: #c5a059;
-                letter-spacing: 6px;
-                text-transform: uppercase;
-                margin-bottom: 8px;
-            }}
-            .cert-title {{
-                font-family: 'Cinzel', serif;
-                font-size: 42px;
-                font-weight: 800;
-                color: #0f172a;
-                letter-spacing: 6px;
-                text-transform: uppercase;
-                line-height: 1.1;
-            }}
-            .gold-line-divider {{
-                width: 140px;
-                height: 3px;
-                background: linear-gradient(90deg, transparent, #c5a059, transparent);
-                margin: 15px auto 0 auto;
-            }}
-
-            .body-content {{
-                text-align: center;
-                z-index: 3;
-                margin: 15px 0;
-            }}
-            .present-text {{
-                font-size: 14px;
-                color: #64748b;
-                letter-spacing: 2px;
-                text-transform: uppercase;
-                font-weight: 600;
-            }}
-            .student-name {{
-                font-family: 'Alex Brush', cursive;
-                font-size: 64px;
-                color: #0f172a;
-                margin: 8px 0 12px 0;
-                line-height: 1.1;
-            }}
-            .reason-text {{
-                font-size: 15px;
-                color: #475569;
-                max-width: 720px;
-                margin: 0 auto;
-                line-height: 1.5;
-            }}
-            .course-highlight {{
-                font-weight: 700;
-                color: #0f172a;
-                font-size: 22px;
-                font-family: 'Plus Jakarta Sans', sans-serif;
-            }}
-            
-            .metrics-card {{
-                display: inline-flex;
-                align-items: center;
-                gap: 20px;
-                background: #f8fafc;
-                border: 1px solid #cbd5e1;
-                padding: 8px 25px;
-                border-radius: 50px;
-                margin-top: 20px;
-            }}
-            .metric-item {{
-                font-size: 14px;
-                color: #475569;
-                font-weight: 600;
-            }}
-            .metric-val {{
-                color: #059669;
-                font-weight: 700;
-            }}
-
-            .footer {{
-                display: flex;
-                justify-content: space-between;
-                align-items: flex-end;
-                z-index: 3;
-                padding: 0 30px;
-                margin-bottom: 5px;
-            }}
-            .footer-col {{
-                text-align: center;
-                width: 220px;
-            }}
-            .sig-text {{
-                font-family: 'Alex Brush', cursive;
-                font-size: 32px;
-                color: #0f172a;
-                margin-bottom: 3px;
-            }}
-            .date-display {{
-                font-weight: 700;
-                color: #0f172a;
-                font-size: 15px;
-                margin-bottom: 12px;
-            }}
-            .sig-line {{
-                border-bottom: 1.5px solid #94a3b8;
-                margin-bottom: 8px;
-            }}
-            .footer-label {{
-                font-size: 11px;
-                color: #64748b;
-                text-transform: uppercase;
-                letter-spacing: 1.5px;
-                font-weight: 700;
-            }}
-            
-            .seal-container {{
-                text-align: center;
-            }}
-            .svg-seal {{
-                width: 70px;
-                height: 70px;
-            }}
-
-            .action-btn-container {{
-                margin-top: 25px;
-                z-index: 10;
-                text-align: center;
-            }}
-            .download-btn {{
-                background: #059669;
-                color: #ffffff;
-                padding: 14px 32px;
-                border: none;
-                border-radius: 8px;
-                font-weight: 700;
-                font-size: 18px;
-                cursor: pointer;
-                box-shadow: 0 4px 15px rgba(5, 150, 105, 0.4);
-            }}
+            .gold-border {{ position: absolute; top: 12px; left: 12px; right: 12px; bottom: 12px; border: 2px solid #c5a059; pointer-events: none; z-index: 1; }}
+            .inner-thin-border {{ position: absolute; top: 18px; left: 18px; right: 18px; bottom: 18px; border: 1px solid #e2e8f0; pointer-events: none; z-index: 1; }}
+            .watermark {{ position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-family: 'Cinzel', serif; font-size: 130px; font-weight: 900; color: rgba(197, 160, 89, 0.03); letter-spacing: 15px; pointer-events: none; white-space: nowrap; z-index: 0; }}
+            .header {{ text-align: center; z-index: 3; margin-top: 5px; }}
+            .brand-badge {{ font-size: 13px; font-weight: 700; color: #c5a059; letter-spacing: 6px; text-transform: uppercase; margin-bottom: 8px; }}
+            .cert-title {{ font-family: 'Cinzel', serif; font-size: 42px; font-weight: 800; color: #0f172a; letter-spacing: 6px; text-transform: uppercase; line-height: 1.1; }}
+            .gold-line-divider {{ width: 140px; height: 3px; background: linear-gradient(90deg, transparent, #c5a059, transparent); margin: 15px auto 0 auto; }}
+            .body-content {{ text-align: center; z-index: 3; margin: 15px 0; }}
+            .present-text {{ font-size: 14px; color: #64748b; letter-spacing: 2px; text-transform: uppercase; font-weight: 600; }}
+            .student-name {{ font-family: 'Alex Brush', cursive; font-size: 64px; color: #0f172a; margin: 8px 0 12px 0; line-height: 1.1; }}
+            .reason-text {{ font-size: 15px; color: #475569; max-width: 720px; margin: 0 auto; line-height: 1.5; }}
+            .course-highlight {{ font-weight: 700; color: #0f172a; font-size: 22px; }}
+            .metrics-card {{ display: inline-flex; align-items: center; gap: 20px; background: #f8fafc; border: 1px solid #cbd5e1; padding: 8px 25px; border-radius: 50px; margin-top: 20px; }}
+            .metric-item {{ font-size: 14px; color: #475569; font-weight: 600; }}
+            .metric-val {{ color: #059669; font-weight: 700; }}
+            .footer {{ display: flex; justify-content: space-between; align-items: flex-end; z-index: 3; padding: 0 30px; margin-bottom: 5px; }}
+            .footer-col {{ text-align: center; width: 220px; }}
+            .sig-text {{ font-family: 'Alex Brush', cursive; font-size: 32px; color: #0f172a; margin-bottom: 3px; }}
+            .date-display {{ font-weight: 700; color: #0f172a; font-size: 15px; margin-bottom: 12px; }}
+            .sig-line {{ border-bottom: 1.5px solid #94a3b8; margin-bottom: 8px; }}
+            .footer-label {{ font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 700; }}
+            .action-btn-container {{ margin-top: 25px; z-index: 10; text-align: center; }}
+            .download-btn {{ background: #059669; color: #ffffff; padding: 14px 32px; border: none; border-radius: 8px; font-weight: 700; font-size: 18px; cursor: pointer; box-shadow: 0 4px 15px rgba(5, 150, 105, 0.4); }}
         </style>
     </head>
     <body>
-
         <div class="cert-viewport">
             <div id="certificate" class="cert-card">
                 <div class="gold-border"></div>
                 <div class="inner-thin-border"></div>
                 <div class="watermark">QUIZOPS</div>
-
                 <div class="header">
                     <div class="brand-badge">✦ QuizOps Examination Authority ✦</div>
                     <div class="cert-title">Certificate of Excellence</div>
                     <div class="gold-line-divider"></div>
                 </div>
-
                 <div class="body-content">
                     <div class="present-text">This official certificate is proudly presented to</div>
                     <div class="student-name">{user_name}</div>
-                    
                     <div class="reason-text">
                         for successfully demonstrating outstanding proficiency and completing the examination for<br>
                         <span class="course-highlight">"{result.quiz_title}"</span>
                     </div>
-
                     <div class="metrics-card">
                         <div class="metric-item">Score: <span class="metric-val">{result.score}/{result.total_questions}</span></div>
                         <div style="color: #cbd5e1;">•</div>
@@ -652,23 +456,12 @@ def download_certificate(result_id):
                         <div class="metric-item">Result: <span style="color: #059669; font-weight: 800;">PASSED</span></div>
                     </div>
                 </div>
-
                 <div class="footer">
                     <div class="footer-col">
                         <div class="date-display">{date_str}</div>
                         <div class="sig-line"></div>
                         <div class="footer-label">Date of Issue</div>
                     </div>
-
-                    <div class="seal-container">
-                        <svg class="svg-seal" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <circle cx="50" cy="50" r="45" fill="#F8B500" stroke="#FFFFFF" stroke-width="2"/>
-                            <circle cx="50" cy="50" r="38" stroke="#FFFFFF" stroke-dasharray="2 2" stroke-width="1.5"/>
-                            <path d="M50 22L56.5 35.5L71.5 37.5L60.5 48L63 63L50 56L37 63L39.5 48L28.5 37.5L43.5 35.5L50 22Z" fill="#FFFFFF"/>
-                        </svg>
-                        <div class="footer-label" style="margin-top: 3px; color: #c5a059; font-weight: 800;">VERIFIED SEAL</div>
-                    </div>
-
                     <div class="footer-col">
                         <div class="sig-text">QuizOps Authority</div>
                         <div class="sig-line"></div>
@@ -677,39 +470,26 @@ def download_certificate(result_id):
                 </div>
             </div>
         </div>
-
         <div class="action-btn-container">
             <button onclick="downloadPDF()" class="download-btn">📥 Save PDF Directly</button>
         </div>
-
         <script>
             function downloadPDF() {{
                 window.scrollTo(0, 0);
-
                 const element = document.getElementById('certificate');
                 const parentViewport = document.querySelector('.cert-viewport');
-                
                 let oldZoom = '';
                 if (parentViewport) {{
                     oldZoom = parentViewport.style.zoom;
                     parentViewport.style.zoom = '1';
                 }}
-
                 const opt = {{
-                    margin:       0,
-                    filename:     'Certificate_{user_name}.pdf',
-                    image:        {{ type: 'jpeg', quality: 1.0 }},
-                    html2canvas:  {{ 
-                        scale: 2, 
-                        useCORS: true,
-                        scrollX: 0,
-                        scrollY: 0,
-                        width: element.offsetWidth,
-                        height: element.offsetHeight
-                    }},
-                    jsPDF:        {{ unit: 'mm', format: 'a4', orientation: 'landscape' }}
+                    margin: 0,
+                    filename: 'Certificate_{user_name}.pdf',
+                    image: {{ type: 'jpeg', quality: 1.0 }},
+                    html2canvas: {{ scale: 2, useCORS: true, scrollX: 0, scrollY: 0, width: element.offsetWidth, height: element.offsetHeight }},
+                    jsPDF: {{ unit: 'mm', format: 'a4', orientation: 'landscape' }}
                 }};
-
                 html2pdf().set(opt).from(element).save().then(() => {{
                     if (parentViewport) {{
                         parentViewport.style.zoom = oldZoom;
@@ -717,7 +497,6 @@ def download_certificate(result_id):
                 }});
             }}
         </script>
-
     </body>
     </html>
     """
