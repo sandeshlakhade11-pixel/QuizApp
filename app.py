@@ -214,7 +214,7 @@ def submit_quiz(quiz_id):
         total_questions=total_questions,    
         percentage=percentage,
         status=status,
-        date_taken=datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        date_taken=datetime.now().strftime('%Y-%m-%d')
     )
     
     db.session.add(new_result)
