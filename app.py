@@ -46,6 +46,10 @@ class User(UserMixin, db.Model):
     password = db.Column(db.String(150), nullable=False)
     role = db.Column(db.String(50), nullable=False) # Student, Teacher, Admin
 
+    # Cascading relationships added to fix delete user 500 error safely
+    results = db.relationship('Result', backref='user', cascade="all, delete-orphan")
+    quizzes = db.relationship('Quiz', backref='teacher', cascade="all, delete-orphan")
+
 class Quiz(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(150), nullable=False)
@@ -53,6 +57,9 @@ class Quiz(db.Model):
     duration = db.Column(db.Integer, nullable=False) # In minutes
     pass_mark = db.Column(db.Float, nullable=False) # Passing Percentage
     teacher_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+
+    questions = db.relationship('Question', backref='quiz', cascade="all, delete-orphan")
+    results = db.relationship('Result', backref='quiz', cascade="all, delete-orphan")
 
 class Question(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -74,8 +81,6 @@ class Result(db.Model):
     percentage = db.Column(db.Float, nullable=False)
     status = db.Column(db.String(20), nullable=False) # Pass or Fail
     date_taken = db.Column(db.String(50), nullable=False)
-    
-    user = db.relationship('User', backref='results')
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -196,8 +201,6 @@ def submit_quiz(quiz_id):
     percentage = (score / total_questions * 100) if total_questions > 0 else 0
     passing_limit = float(getattr(quiz, 'pass_mark', 35))
     
-    # इथे आपण दोन्ही डॅशबोर्डसाठी स्टँडर्ड ठेवलं आहे: 
-    # जर टक्केवारी पासिंग लिमिटपेक्षा जास्त किंवा समान असेल तर 'Passed', अन्यथा 'Failed'
     if percentage >= passing_limit:
         status = 'Passed'
     else:
@@ -371,9 +374,13 @@ def delete_user(user_id):
     if user.id == current_user.id:
         flash('You cannot delete your own admin account!', 'danger')
     else:
-        db.session.delete(user)
-        db.session.commit()
-        flash('User deleted successfully!', 'success')
+        try:
+            db.session.delete(user)
+            db.session.commit()
+            flash('User and all related records deleted successfully!', 'success')
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error deleting user: {str(e)}', 'danger')
         
     return redirect(url_for('admin_dashboard'))
 
