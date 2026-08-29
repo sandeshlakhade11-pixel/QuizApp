@@ -199,7 +199,7 @@ def submit_quiz(quiz_id):
     percentage = (score / total_questions * 100) if total_questions > 0 else 0
     passing_limit = float(getattr(quiz, 'pass_mark', 35))
     status = 'Passed' if percentage >= passing_limit else 'Failed'
-    print(f"DEBUG ---> Score Percentage: {percentage}, Passing Limit: {passing_limit}, Calculated Status: {status}")
+    flash(f"DEBUG: Score={score}, Total={total_questions}, Perc={percentage}%, PassLimit={passing_limit}, Status={status}", "warning")
     
     # Save Result with quiz_title and total_questions
     new_result = Result(
