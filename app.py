@@ -205,8 +205,6 @@ def submit_quiz(quiz_id):
     else:
         status = 'FAILED'
         
-    flash(f"DEBUG: Score={score}, Total={total_questions}, Perc={percentage}%, PassLimit={passing_limit}, Status={status}", "warning")
-
     # Save Result with quiz_title and total_questions
     new_result = Result(
         user_id=current_user.id,
