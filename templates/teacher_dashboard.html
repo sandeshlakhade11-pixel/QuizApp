@@ -123,7 +123,6 @@
                     <tbody>
                         {% for res in results %}
                         <tr style="border-bottom: 1px solid #334155;">
-                            <!-- विद्यार्थ्याचे नाव (user.name -> user.username -> student_name -> Student) -->
                             <td style="padding: 12px;">
                                 <b>
                                     {% if res.user and res.user.name %}
@@ -141,7 +140,7 @@
                             <td style="padding: 12px;">{{ res.score }}/{{ res.total_questions }}</td>
                             <td style="padding: 12px;">{{ "%.1f"|format(res.percentage) }}%</td>
                             <td style="padding: 12px;">
-                                {% if res.status == 'PASSED' or res.percentage >= 80 %}
+                                {% if res.status.lower() == 'passed' %}
                                     <span style="background:rgba(16, 185, 129, 0.2); color:#10b981; padding:4px 10px; border-radius:4px; font-size:12px; font-weight:bold; border:1px solid #10b981;">PASSED</span>
                                 {% else %}
                                     <span style="background:rgba(239, 68, 68, 0.2); color:#ef4444; padding:4px 10px; border-radius:4px; font-size:12px; font-weight:bold; border:1px solid #ef4444;">FAILED</span>
