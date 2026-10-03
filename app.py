@@ -16,8 +16,6 @@ app.config['SQLALCHEMY_DATABASE_URI'] = db_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
-with app.app_context():
-    db.create_all()
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 
@@ -29,14 +27,18 @@ def init_db():
 
 @app.route('/create-admin-now')
 def create_admin_now():
-    with app.app_context():
-        admin = User.query.filter(db.func.lower(User.role) == 'admin').first()
-        if not admin:
-            default_admin = User(username='admin', email='admin@quizops.com', password='adminpassword', role='Admin')
-            db.session.add(default_admin)
-            db.session.commit()
-            return "Admin created successfully! Now you can login."
-        return "Admin already exists!"
+    try:
+        with app.app_context():
+            db.create_all()
+            admin = User.query.filter(db.func.lower(User.role) == 'admin').first()
+            if not admin:
+                default_admin = User(username='admin', email='admin@quizops.com', password='adminpassword', role='Admin')
+                db.session.add(default_admin)
+                db.session.commit()
+                return "Admin created successfully! Now you can login."
+            return "Admin already exists!"
+    except Exception as e:
+        return f"Error: {str(e)}"
 
 # --- DATABASE MODELS ---
 class User(UserMixin, db.Model):
@@ -157,7 +159,6 @@ def logout():
 @login_required
 def student_dashboard():
     quizzes = Quiz.query.all() 
-    # इथे order_by लावून नवीन रेकॉर्ड सर्वात वर आणला आहे
     results = Result.query.filter_by(user_id=current_user.id).order_by(Result.id.desc()).all()
     return render_template('student_dashboard.html', quizzes=quizzes, results=results)
 
@@ -210,7 +211,7 @@ def submit_quiz(quiz_id):
     new_result = Result(
         user_id=current_user.id,
         quiz_id=quiz.id,
-        quiz_title=quiz.title,              
+        quiz_title=quiz.title,             
         score=score,
         total_questions=total_questions,    
         percentage=percentage,
@@ -512,14 +513,17 @@ def download_certificate(result_id):
 
 # --- SETUP DEFAULT ADMIN ---
 def create_admin():
-    admin = User.query.filter(db.func.lower(User.role) == 'admin').first()
-    if not admin:
-        default_admin = User(username='admin', email='admin@quizops.com', password='adminpassword', role='Admin')
-        db.session.add(default_admin)
-        db.session.commit()
+    try:
+        with app.app_context():
+            db.create_all()
+            admin = User.query.filter(db.func.lower(User.role) == 'admin').first()
+            if not admin:
+                default_admin = User(username='admin', email='admin@quizops.com', password='adminpassword', role='Admin')
+                db.session.add(default_admin)
+                db.session.commit()
+    except Exception as e:
+        print("Database init skipped or pending:", e)
 
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
-        create_admin()
+    create_admin()
     app.run(host='0.0.0.0', port=5000, debug=True)
